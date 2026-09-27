@@ -1,5 +1,5 @@
 # AI Prompt Log — EECS 581 AI Assignment 1
-
+09/27/2026
 ## Model disclosure
 
 All AI-generated code and text in this repository was produced by **Claude Sonnet 5**
@@ -7,8 +7,14 @@ All AI-generated code and text in this repository was produced by **Claude Sonne
 
 ## What is and isn't AI-generated
 
-- **AI-generated**: `ipv4_extract.h`, `ipv4_extract.c`, `main.c`, `Makefile`, this file.
-  Each source file carries a header comment naming the model and generation date.
+- **AI-generated**: `ipv4_extract.h`, `ipv4_extract.c`, `main.c` (as originally
+  generated), `Makefile`, `.gitignore`, `tests.c`, this file. Each source file carries
+  a header comment naming the model and generation date.
+- **Note**: after generation, `main.c` received a direct hand edit (not via an AI
+  prompt) adding a `"Program terminated."` message on the `END` path, marked inline
+  with `// Added by Luke Reicherter`. That line is not AI-generated.
+- **Note**: `digit_accum.c`'s `accumulateDigit()` has since been implemented by hand
+  (replacing the crashing placeholder described above) — not AI-generated.
 - **Not AI-generated (student-written)**: `digit_accum.c` — specifically the body of
   `accumulateDigit()`, the function that turns a decimal digit character into part of
   an accumulated integer value. The AI-generated code in `ipv4_extract.c` calls this
@@ -103,9 +109,80 @@ Implemented and tested `extractIPv4()`'s grammar:
   needing `accumulateDigit`, and crashes with a clear message on any line containing
   an actual candidate IP, until `digit_accum.c` is filled in.
 
-## Open items for the student
+## Prompt 3
 
-- `digit_accum.c`: implement `accumulateDigit()` yourself (see the contract comment in
-  `ipv4_extract.h` and the TODO in `digit_accum.c`).
-- The no-port / no-match output text was my assumption, not explicitly stated in the
-  prompt — confirm it matches what's expected before submitting.
+**User prompt (verbatim):**
+
+> add a gitignore
+
+**Response summary / changes made:**
+
+Added `.gitignore` ignoring build artifacts (`*.o`, `*.obj`, the `ipv4prog` binary) and
+common editor/OS cruft (`.DS_Store`, `*.swp`). No other files changed.
+
+Also flagged, unprompted, that the user's own concurrent hand edit to `main.c` (adding
+`printf("Program terminated.")` on the `END` path) was initially missing a trailing
+semicolon and would fail to compile; the user fixed it before this prompt.
+
+## Fix — output format for missing port
+
+The full assignment handout specifies the success line must read
+`port: P` where P is the port number **or the literal text `none`** when no port is
+present. `main.c` had been printing the internal `-1` sentinel value instead (`port:
+-1`), based on an earlier assumption made before this detail was pinned down.
+
+**Change made:** `main.c`'s success branch now checks `port == -1` and prints
+`port: none` in that case, `port: %d` otherwise. Rebuilt and manually verified:
+`192.168.1.1` (no port) now prints `port: none`; ported inputs are unaffected.
+
+## Prompt 4
+
+**User prompt (verbatim):**
+
+> Make a test suite the covers a bunch of test cases, this would be a separate
+> executable that tries a ton of separate inputs and determines if it matches the
+> expected output
+
+**Response summary / changes made:**
+
+Added `tests.c`: a standalone test suite with its own `main()`, built as a separate
+executable (`ipv4test`) from the interactive program, so it doesn't collide with
+`main.c`'s `main()`. It defines 36 test cases as `{name, input, expectMatch,
+expectAddress, expectPort}` records and runs each one through `extractIPv4()`,
+comparing the actual result against the expected one and printing PASS/FAIL per case
+plus a final `passed/total` count; the process exits nonzero if any case fails.
+
+Cases cover: the example from the original prompt, addresses with and without a port,
+all-zero and max-value addresses/ports, leading-zero rejection on both octets and the
+port, out-of-range octets and ports, wrong octet counts, empty octets (`1..2.3`),
+stray leading/trailing `.` or `:`, a second colon, a colon before the fourth octet, a
+repeated colon, oversized digit runs, no candidate characters at all, an invalid
+candidate run followed by a later valid one (confirms rejection doesn't stop the
+scan), only the first valid match being returned when two valid addresses are present,
+and a few boundary strings (`""`, `":"`, `"..."`).
+
+Wired `tests.c` into the `Makefile` as a `make test` target (builds `ipv4test` and runs
+it) and added `ipv4test` to `.gitignore`. Built and ran it against the current
+`ipv4_extract.c` and the student's own hand-written `accumulateDigit()`: all 36/36
+tests passed.
+
+## Prompt 5
+
+**User prompt (verbatim):**
+
+> Invalid input: no valid IPv4 address found
+
+**Response summary / changes made:**
+
+Interpreted as the exact wording wanted for the failure-case output, replacing the
+previous placeholder text (`No valid IPv4 address found.`, flagged as an assumption in
+Prompt 2/3's notes). Updated `main.c`'s failure branch to print
+`Invalid input: no valid IPv4 address found` verbatim (no trailing period). Rebuilt
+and manually verified against a no-match input; re-ran `make test` to confirm the
+change didn't affect `extractIPv4()` behavior (36/36 still pass, since the test suite
+checks return values/outAddress/outPort, not this printed string).
+
+## Project Verification Statement
+
+I, Luke Reicherter, verify that all code generated by AI has been reviewed to ensure requirements are met.
+I understand each line of code written and can verify that the code is safe to run.

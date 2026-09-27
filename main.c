@@ -10,12 +10,11 @@
  * formats the result. Loops until the user enters the exact, case
  * sensitive line "END".
  *
- * Output format assumptions (not fully pinned down by the assignment
- * text, flagged here rather than guessed silently):
+ * Output format:
  *   - On success: "Extracted IPv4 address: A.B.C.D (decimal value: N, port: P)"
- *     where P is the literal outPort value, i.e. "-1" when no port was
- *     present in the input (matching extractIPv4's own no-port sentinel).
- *   - On failure: "No valid IPv4 address found."
+ *     where P is the port number, or the literal text "none" if no port
+ *     was present in the input.
+ *   - On failure: "Invalid input: no valid IPv4 address found"
  */
 
 #include <stdio.h>
@@ -58,10 +57,15 @@ int main(void) {
             unsigned int c = (unsigned int)((address >> 8) & 0xFF);
             unsigned int d = (unsigned int)(address & 0xFF);
 
-            printf("Extracted IPv4 address: %u.%u.%u.%u (decimal value: %lu, port: %d)\n",
-                   a, b, c, d, address, port);
+            if (port == -1) {
+                printf("Extracted IPv4 address: %u.%u.%u.%u (decimal value: %lu, port: none)\n",
+                       a, b, c, d, address);
+            } else {
+                printf("Extracted IPv4 address: %u.%u.%u.%u (decimal value: %lu, port: %d)\n",
+                       a, b, c, d, address, port);
+            }
         } else {
-            printf("No valid IPv4 address found.\n");
+            printf("Invalid input: no valid IPv4 address found\n");
         }
     }
 

@@ -2,6 +2,7 @@
 *.o
 *.obj
 ipv4prog
+ipv4test
 
 # Editor/OS cruft
 .DS_Store
