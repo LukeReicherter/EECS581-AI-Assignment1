@@ -48,6 +48,7 @@ int main(void) {
         }
 
         if (strcmp(line, "END") == 0) {
+	    printf("Program terminated.");  // Added by Luke Reicherter
             break;
         }
 

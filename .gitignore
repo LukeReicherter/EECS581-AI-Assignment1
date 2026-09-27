@@ -1,0 +1,8 @@
+# Build artifacts
+*.o
+*.obj
+ipv4prog
+
+# Editor/OS cruft
+.DS_Store
+*.swp
